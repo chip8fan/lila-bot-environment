@@ -3,3 +3,4 @@ __pycache__
 stockfish-cp
 homemade-engine
 tokens.txt
+.DS_Store
