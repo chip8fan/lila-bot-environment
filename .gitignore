@@ -1,0 +1,5 @@
+lila-docker
+__pycache__
+stockfish-cp
+homemade-engine
+tokens.txt

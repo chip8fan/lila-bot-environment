@@ -24,7 +24,7 @@ class Engine():
                     material_difference -= piece[1]*len(board.pieces(piece[0], color))
         return material_difference
     def negamax(self, board: chess.Board, depth: int, color: int, start_time: float, max_time: float): # psuedocode taken from https://www.chessprogramming.org/Negamax
-        if depth == 0:
+        if depth == 0 or board.is_game_over() or board.can_claim_draw():
             return self.get_material(board)*color
         elif start_time+max_time <= time.time():
             return None
@@ -55,19 +55,21 @@ class Engine():
             max_score = -sys.maxsize
             for move in board.legal_moves:
                 board.push(move)
-                score = self.negamax(board, current_depth, color, start, max_time)
-                if score is not None:
+                try:
+                    score = -self.negamax(board, current_depth, -color, start, max_time)
                     if score > max_score:
                         max_score = score
                         best_moves.clear()
                         best_moves.append(move)
                     elif score == max_score:
                         best_moves.append(move)
-                else:
+                except TypeError:
                     break_flag = True
                     break
                 board.pop()
-            if break_flag:
+            if break_flag or max_score == 100000:
+                if max_score == 100000 and break_flag == False:
+                    lists.append(best_moves)
                 break
             current_depth += 1
             lists.append(best_moves)
@@ -79,23 +81,28 @@ class Stockfish():
         else:
             mate_count = int(str(score).replace("#", ""))
             if mate_count < 0:
-                return -100000
+                return -100000+mate_count
             elif mate_count > 0:
-                return 100000
+                return 100000-mate_count
     def play(self, board: chess.Board, time_limit: float, cp_loss: int):
         engine = chess.engine.SimpleEngine.popen_uci("/opt/homebrew/bin/stockfish")
         scores = []
         max_score = -sys.maxsize
         for move in board.legal_moves:
             board.push(move)
-            score = self.convert(-engine.analyse(board, chess.engine.Limit(time=time_limit))["score"].relative)
+            if board.can_claim_draw() or board.result() == "1/2-1/2":
+                score = 0
+            elif board.result() == "0-1" or board.result() == "1-0":
+                score = 100000
+            else:
+                score = self.convert(-engine.analyse(board, chess.engine.Limit(time=time_limit))["score"].relative)
             if score is not None:
                 if score > max_score:
                     max_score = score
                 scores.append([move, score])
             board.pop()
-        if max_score == 100000:
-            return engine.play(board, chess.engine.Limit(time=time_limit)).move
+        if abs(max_score) == 100000:
+            cp_loss = 0
         engine.quit()
         best_moves = []
         for move in scores:
