@@ -4,3 +4,5 @@ stockfish-cp
 homemade-engine
 tokens.txt
 .DS_Store
+chess-engine
+commit.py
