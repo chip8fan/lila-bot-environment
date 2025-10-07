@@ -5,6 +5,5 @@ homemade-engine
 tokens.txt
 .DS_Store
 chess-engine
-commit.py
-reset.py
 lichess-bot
+chess-engine-alternate
