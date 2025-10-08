@@ -74,38 +74,3 @@ class Engine():
             current_depth += 1
             lists.append(best_moves)
         return random.choice(lists[-1])
-class Stockfish():
-    def convert(self, score: chess.engine.Cp):
-        if "#" not in str(score):
-            return int(str(score))
-        else:
-            mate_count = int(str(score).replace("#", ""))
-            if mate_count < 0:
-                return -100000+mate_count
-            elif mate_count > 0:
-                return 100000-mate_count
-    def play(self, board: chess.Board, time_limit: float, cp_loss: int):
-        engine = chess.engine.SimpleEngine.popen_uci("/opt/homebrew/bin/stockfish")
-        scores = []
-        max_score = -sys.maxsize
-        for move in board.legal_moves:
-            board.push(move)
-            if board.can_claim_draw() or board.result() == "1/2-1/2":
-                score = 0
-            elif board.result() == "0-1" or board.result() == "1-0":
-                score = 100000
-            else:
-                score = self.convert(-engine.analyse(board, chess.engine.Limit(time=time_limit))["score"].relative)
-            if score is not None:
-                if score > max_score:
-                    max_score = score
-                scores.append([move, score])
-            board.pop()
-        if abs(max_score) == 100000:
-            cp_loss = 0
-        engine.quit()
-        best_moves = []
-        for move in scores:
-            if move[1] >= max_score-cp_loss:
-                best_moves.append(move[0])
-        return random.choice(best_moves)
