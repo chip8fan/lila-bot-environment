@@ -53,7 +53,7 @@ class Engine():
         while True:
             best_moves = []
             max_score = -sys.maxsize
-            for move in board.legal_moves:
+            for move in list(board.legal_moves):
                 board.push(move)
                 try:
                     score = -self.negamax(board, current_depth, -color, start, max_time)
