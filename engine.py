@@ -127,7 +127,7 @@ class AlternateEngine():
             for move in list(board.legal_moves):
                 board.push(move)
                 try:
-                    score = -self.negamax(board, current_depth, -color, start, max_time)
+                    score = -self.negamax(board, current_depth, -color, start, max_time, -sys.maxsize, sys.maxsize)
                     if score > max_score:
                         max_score = score
                         best_moves.clear()
