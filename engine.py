@@ -2,7 +2,6 @@ import chess
 import sys
 import time
 import random
-import chess.engine
 class Engine():
     def get_material(self, board: chess.Board): # material code taken from https://chess.stackexchange.com/questions/39004/python-efficient-board-scoring-function-to-use-as-placeholder
         if board.is_game_over() or board.can_claim_draw():
@@ -94,31 +93,24 @@ class AlternateEngine():
                 elif color == chess.BLACK:
                     material_difference -= piece[1]*len(board.pieces(piece[0], color))
         return material_difference
-    def filter_moves(self, board: chess.Board, moves_list: list):
-        new_moves = []
-        for move in moves_list:
-            if board.gives_check(move) or board.is_capture(move):
-                new_moves.append(move)
-        if len(new_moves) == 0:
-            return list(board.legal_moves)
-        return new_moves
-    def negamax(self, board: chess.Board, depth: int, color: int, start_time: float, max_time: float): # psuedocode taken from https://www.chessprogramming.org/Negamax
+    def negamax(self, board: chess.Board, depth: int, color: int, start_time: float, max_time: float, alpha: float, beta: float): # psuedocode taken from https://www.chessprogramming.org/Alpha-Beta
         if depth == 0 or board.is_game_over() or board.can_claim_draw():
             return self.get_material(board)*color
         elif start_time+max_time <= time.time():
             return None
-        max = -sys.maxsize
-        for move in self.filter_moves(board, list(board.legal_moves)):
+        for move in list(board.legal_moves):
             board.push(move)
             try:
-                score = -self.negamax(board, depth-1, -color, start_time, max_time)
+                score = -self.negamax(board, depth-1, -color, start_time, max_time, -beta, -alpha)
                 board.pop()
             except TypeError:
                 board.pop()
                 return None
-            if score > max:
-                max = score
-        return max
+        if score >= beta:
+            return beta
+        if score > alpha:
+            alpha = score
+        return alpha
     def play(self, board: chess.Board, max_time: float): # root negamax function
         color = None
         current_depth = 1
@@ -132,7 +124,7 @@ class AlternateEngine():
         while True:
             best_moves = []
             max_score = -sys.maxsize
-            for move in self.filter_moves(board, list(board.legal_moves)):
+            for move in list(board.legal_moves):
                 board.push(move)
                 try:
                     score = -self.negamax(board, current_depth, -color, start, max_time)
@@ -153,15 +145,3 @@ class AlternateEngine():
             current_depth += 1
             lists.append(best_moves)
         return random.choice(lists[-1])
-class Stockfish():
-    def play(self, board: chess.Board, max_time: float):
-        self.engine = chess.engine.SimpleEngine.popen_uci("/opt/homebrew/bin/stockfish")
-        self.move = self.engine.play(board, chess.engine.Limit(time=max_time)).move
-        self.engine.quit()
-        return self.move
-class LeelaChessZero():
-    def play(self, board: chess.Board, max_time: float):
-        self.engine = chess.engine.SimpleEngine.popen_uci("/opt/homebrew/bin/lc0")
-        self.move = self.engine.play(board, chess.engine.Limit(time=max_time)).move
-        self.engine.quit()
-        return self.move

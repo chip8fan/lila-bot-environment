@@ -1,11 +1,7 @@
 lila-docker
 __pycache__
-stockfish-cp
-homemade-engine
 tokens.txt
 .DS_Store
 chess-engine
 lichess-bot
-chess-engine-alternate
-Stockfish
-LeelaChessZero
+lichess-bot-alt
